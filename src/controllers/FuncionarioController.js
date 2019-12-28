@@ -1,0 +1,128 @@
+const Funcionario = require('../models/Funcionario');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const jwtSecret = process.env.JWT_SECRET;
+const jwtTTL = process.env.JWT_TTL;
+
+function gerarToken(params = {}) {
+  return jwt.sign({ params }, jwtSecret, {
+    expiresIn: jwtTTL
+  });
+}
+
+module.exports = {
+  /**
+   * criando rota
+   * req simboliza a requisicao ao servidor. ele contem todo o detalhe dessa requisicao, por exemplo, body da requisicao, usuario, autenticacao, ip etc.
+   * res é a resposta para a requisicao. ele contem toda a informacao de resposta exposta para o usuario.
+   */
+  async autorizacao(req, res) {
+    try {
+      const { email, cpf } = req.body;
+      const autenticacao = await Funcionario.findOne({ email, cpf });
+
+      if (!autenticacao)
+        return res
+          .status(401)
+          .send('Email ou Cpf ' + [autenticacao] + ' nao existem');
+
+      // usar caso for autenticar por senha
+      // if (!await bcrypt.compare(senha, autenticacao.senha))
+      //     return res.status(401).send({ error: 'Senha invalida' })
+      // autenticacao.senha = undefined // esconde a senha do response
+
+      return res.send({
+        autenticacao,
+        token: gerarToken({ id: autenticacao.id })
+      });
+    } catch (error) {
+      return res.status(401).send({ error: 'erro na validacao do login' });
+    }
+  },
+
+  async list(req, res) {
+    try {
+      const funcionario = await Funcionario.find();
+      return res.json(funcionario);
+    } catch (error) {
+      return res.status(500).send(error);
+    }
+  },
+
+  async find(req, res) {
+    try {
+      // const funcionario = await Funcionario.findById(req.params.id) // buscando por _id
+      const funcionario = await Funcionario.find({
+        matricula: req.params.matricula
+      }); // buscando por matricula
+
+      if (!funcionario)
+        return res.status(404).send('Funcionario nao encontrado');
+
+      return res.json(funcionario);
+    } catch (error) {
+      return res.status(500).send(error);
+    }
+  },
+
+  async creating(req, res) {
+    try {
+      const { cpf } = req.body;
+
+      if (await Funcionario.findOne({ cpf }))
+        return res.send('CPF já cadastrado');
+
+      // insere no banco novo usuario
+      let funcionario_instance = new Funcionario(req.body)
+
+      await funcionario_instance.save((err) => {
+        if (err) return err
+      })
+
+      const funcionario = await Funcionario.create(funcionario_instance, (err) => {
+        if (err) return err
+      });
+
+      res.status(200).send([req.body.nome] + '  Cadastrado!')
+
+      // esconde a senha criada para nao mostrar nas buscas
+      // funcionario.senha = undefined
+
+      // retorna o usuario e token criado
+      return res.json({
+        funcionario,
+        token: gerarToken({ id: funcionario._id })
+      });
+    } catch (error) {
+      return res
+        .status(500)
+        .send({ error: 'Nao foi possivel criar novo funcionario' });
+    }
+  },
+
+  //
+  async update(req, res) {
+    try {
+      const funcionario = await Funcionario.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+      );
+      return res.json(funcionario);
+    } catch (error) {
+      return res.status(500).send(error);
+    }
+  },
+  //
+  async destroy(req, res) {
+    try {
+      const funcionario = await Funcionario.findByIdAndRemove(req.params.id);
+
+      return res.send(
+        'Funcionario ' + [funcionario.nome] + ' foi excluido com sucesso'
+      );
+    } catch (error) {
+      return res.status(500).send(error);
+    }
+  }
+};

@@ -1,0 +1,23 @@
+version: '3'
+services:
+  mongo:
+    image: .
+    volumes:
+      - mongo-data:/data/db
+    expose:
+      - "27017"
+  app:
+    build: .
+    command: npm start
+    image: rcts/node-app
+    ports:
+      - "3000:3000"
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URL=mongodb://mongo/Usuarios
+volumes:
+  mongo-data:
+  ./usr/app

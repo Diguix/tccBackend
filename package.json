@@ -1,0 +1,35 @@
+{
+  "name": "projetotcc",
+  "version": "1.0.0",
+  "engines": {
+    "node": "8.x"
+  },
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "3.1.0",
+    "bcrypt": "3.0.6",
+    "bcryptjs": "2.4.3",
+    "cors": "2.8.5",
+    "curl": "0.1.4",
+    "docker": "1.0.0",
+    "docker-composer": "3.1.4",
+    "dotenv": "8.2.0",
+    "express": "4.17.1",
+    "jsonwebtoken": "8.5.1",
+    "mongoose": "5.7.7",
+    "mongoose-paginate": "5.0.3",
+    "morgan": "1.9.1",
+    "require-dir": "1.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "1.19.4"
+  }
+}
