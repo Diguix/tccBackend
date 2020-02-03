@@ -20,6 +20,12 @@ const FuncionarioSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    _placa: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Veiculo'
+        }
+      ],
     updated: { type: Date, default: Date.now },
     createdAt: {
         type: Date,

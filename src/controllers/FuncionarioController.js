@@ -5,124 +5,142 @@ const jwtSecret = process.env.JWT_SECRET;
 const jwtTTL = process.env.JWT_TTL;
 
 function gerarToken(params = {}) {
-  return jwt.sign({ params }, jwtSecret, {
-    expiresIn: jwtTTL
-  });
+    return jwt.sign({ params }, jwtSecret, {
+        expiresIn: jwtTTL,
+    });
 }
 
 module.exports = {
-  /**
-   * criando rota
-   * req simboliza a requisicao ao servidor. ele contem todo o detalhe dessa requisicao, por exemplo, body da requisicao, usuario, autenticacao, ip etc.
-   * res é a resposta para a requisicao. ele contem toda a informacao de resposta exposta para o usuario.
-   */
-  async autorizacao(req, res) {
-    try {
-      const { email, cpf } = req.body;
-      const autenticacao = await Funcionario.findOne({ email, cpf });
+    /**
+     * criando rota
+     * req simboliza a requisicao ao servidor. ele contem todo o detalhe dessa requisicao, por exemplo, body da requisicao, usuario, autenticacao, ip etc.
+     * res é a resposta para a requisicao. ele contem toda a informacao de resposta exposta para o usuario.
+     */
+    async autorizacao(req, res) {
+        try {
+            const { email, cpf } = req.body;
+            const autenticacao = await Funcionario.findOne({ email, cpf });
 
-      if (!autenticacao)
-        return res
-          .status(401)
-          .send('Email ou Cpf ' + [autenticacao] + ' nao existem');
+            if (!autenticacao)
+                return res
+                    .status(401)
+                    .send('Email ou Cpf ' + [autenticacao] + ' nao existem');
 
-      // usar caso for autenticar por senha
-      // if (!await bcrypt.compare(senha, autenticacao.senha))
-      //     return res.status(401).send({ error: 'Senha invalida' })
-      // autenticacao.senha = undefined // esconde a senha do response
+            // usar caso for autenticar por senha
+            // if (!await bcrypt.compare(senha, autenticacao.senha))
+            //     return res.status(401).send({ error: 'Senha invalida' })
+            // autenticacao.senha = undefined // esconde a senha do response
 
-      return res.send({
-        autenticacao,
-        token: gerarToken({ id: autenticacao.id })
-      });
-    } catch (error) {
-      return res.status(401).send({ error: 'erro na validacao do login' });
-    }
-  },
+            return res.send({
+                autenticacao,
+                token: gerarToken({ id: autenticacao.id }),
+            });
+        } catch (error) {
+            return res
+                .status(401)
+                .send({ error: 'erro na validacao do login' });
+        }
+    },
 
-  async list(req, res) {
-    try {
-      const funcionario = await Funcionario.find();
-      return res.json(funcionario);
-    } catch (error) {
-      return res.status(500).send(error);
-    }
-  },
+    async list(req, res) {
+        try {
+            const funcionario = await Funcionario.find();
 
-  async find(req, res) {
-    try {
-      // const funcionario = await Funcionario.findById(req.params.id) // buscando por _id
-      const funcionario = await Funcionario.find({
-        matricula: req.params.matricula
-      }); // buscando por matricula
+            for(value in funcionario){
+              console.log(funcionario[value].cargo)
+              if (value == 'Transportador') {
+                  const veiculo = await Funcionario.find().populate('_veiculo');
+                  res.send(veiculo);
+              }
+            }
 
-      if (!funcionario)
-        return res.status(404).send('Funcionario nao encontrado');
+            return res.json(funcionario);
+        } catch (error) {
+            return res.status(500).send(error);
+        }
+    },
 
-      return res.json(funcionario);
-    } catch (error) {
-      return res.status(500).send(error);
-    }
-  },
+    async find(req, res) {
+        try {
+            // const funcionario = await Funcionario.findById(req.params.id) // buscando por _id
+            const funcionario = await Funcionario.find({
+                matricula: req.params.matricula,
+            }); // buscando por matricula
 
-  async creating(req, res) {
-    try {
-      const { cpf } = req.body;
+            if (!funcionario)
+                return res.status(404).send('Funcionario nao encontrado');
 
-      if (await Funcionario.findOne({ cpf }))
-        return res.send('CPF já cadastrado');
+            return res.json(funcionario);
+        } catch (error) {
+            return res.status(500).send(error);
+        }
+    },
 
-      // insere no banco novo usuario
-      let funcionario_instance = new Funcionario(req.body)
+    async creating(req, res) {
+        try {
+            const { cpf } = req.body;
 
-      await funcionario_instance.save((err) => {
-        if (err) return err
-      })
+            if (await Funcionario.findOne({ cpf }))
+                return res.send('CPF já cadastrado');
 
-      const funcionario = await Funcionario.create(funcionario_instance, (err) => {
-        if (err) return err
-      });
+            // insere no banco novo usuario
+            let funcionario_instance = new Funcionario(req.body);
 
-      res.status(200).send([req.body.nome] + '  Cadastrado!')
+            await funcionario_instance.save(err => {
+                if (err) return err;
+            });
 
-      // esconde a senha criada para nao mostrar nas buscas
-      // funcionario.senha = undefined
+            const funcionario = await Funcionario.create(
+                funcionario_instance,
+                err => {
+                    if (err) return err;
+                }
+            );
 
-      // retorna o usuario e token criado
-      return res.json({
-        funcionario,
-        token: gerarToken({ id: funcionario._id })
-      });
-    } catch (error) {
-      return res
-        .status(500)
-        .send({ error: 'Nao foi possivel criar novo funcionario' });
-    }
-  },
+            res.status(200).send([req.body.nome] + '  Cadastrado!');
 
-  //
-  async update(req, res) {
-    try {
-      const funcionario = await Funcionario.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
-      return res.json(funcionario);
-    } catch (error) {
-      return res.status(500).send(error);
-    }
-  },
-  //
-  async destroy(req, res) {
-    try {
-      const funcionario = await Funcionario.findByIdAndRemove(req.params.id);
+            // esconde a senha criada para nao mostrar nas buscas
+            // funcionario.senha = undefined
 
-      return res.send(
-        'Funcionario ' + [funcionario.nome] + ' foi excluido com sucesso'
-      );
-    } catch (error) {
-      return res.status(500).send(error);
-    }
-  }
+            // retorna o usuario e token criado
+            return res.json({
+                funcionario,
+                token: gerarToken({ id: funcionario._id }),
+            });
+        } catch (error) {
+            return res
+                .status(500)
+                .send({ error: 'Nao foi possivel criar novo funcionario' });
+        }
+    },
+
+    //
+    async update(req, res) {
+        try {
+            const funcionario = await Funcionario.findByIdAndUpdate(
+                req.params.id,
+                req.body,
+                { new: true }
+            );
+            return res.json(funcionario);
+        } catch (error) {
+            return res.status(500).send(error);
+        }
+    },
+    //
+    async destroy(req, res) {
+        try {
+            const funcionario = await Funcionario.findByIdAndRemove(
+                req.params.id
+            );
+
+            return res.send(
+                'Funcionario ' +
+                    [funcionario.nome] +
+                    ' foi excluido com sucesso'
+            );
+        } catch (error) {
+            return res.status(500).send(error);
+        }
+    },
 };
