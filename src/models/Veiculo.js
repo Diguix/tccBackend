@@ -24,6 +24,8 @@ const VeiculoSchema = new mongoose.Schema({
         uppecase: true
     },
     _cpfFuncionario: { type: String, required: true },
+    _nomeFuncionario: { type: String, required: true },
+    _cnhFuncionario: { type: String, required: false },
     _funcionario: {
         type: mongoose.Schema.Types.ObjectId, // _id do funcionario atuando como FK em aluno para relacionar um com o outro
         ref: 'Funcionario' // coleçao 
