@@ -4,7 +4,7 @@ const ProjetoController = require('../controllers/ProjetoController');
 const authMiddlewares = require('../middlewares/auth');
 
 // setando as rotas funcionario
-// routes.post('/funcionario/auth', VeiculosController.autorizacao) // autenticacao dos funcionario
+routes.post('/funcionario/auth', FuncionarioController.autorizacao) // autenticacao dos funcionario
 routes.get('/funcionario/list', FuncionarioController.list); // lista todos os funcionario
 routes.get('/funcionario/find/:cpf', FuncionarioController.find); // pesquisa funcionario
 routes.post('/funcionario/create', FuncionarioController.creating); // grava funcionario
