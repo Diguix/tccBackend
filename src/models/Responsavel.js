@@ -71,7 +71,9 @@ const responsavelSchema = new Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Aluno'
-    }
+    },
+    {type: mongoose.Schema.Types.nome,
+      ref: 'Aluno'}
   ],
   updatedAt: {
     type: Date,

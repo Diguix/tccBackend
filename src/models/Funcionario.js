@@ -20,6 +20,10 @@ const FuncionarioSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    email: {
+        type: String,
+        required: true
+    },
     _placa: [
         {
           type: mongoose.Schema.Types.ObjectId,
