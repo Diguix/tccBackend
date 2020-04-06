@@ -40,8 +40,8 @@ module.exports = {
 
     async list(req, res) {
         try {
-            const resp = await Veiculo.find().populate('_funcionario');
-            return res.json(resp);
+            const veiculo = await Veiculo.find().populate('_funcionario');
+            return res.json(veiculo);
         } catch (error) {
             return res.status(500).send(error);
         }
@@ -68,25 +68,31 @@ module.exports = {
             const { placa } = req.body;
 
             if (await Veiculo.findOne({ placa: placa }))
-                return res.send('Placa já cadastrada');
+                return res.status(401).send('Placa já cadastrada');
 
             let veiculo_instance = new Veiculo(req.body);
 
-            await veiculo_instance.save(err => {
-                if (err) return err;
-            });
+            await veiculo_instance.save();
+            // await veiculo_instance.save(err => {
+            //     if (err) return err;
+            // });
 
-            const resp = await Funcionario.create(
-                veiculo_instance,
-                err => {
-                    if (err) return err;
-                }
-            );
+            const veiculo = await Veiculo.create(veiculo_instance);
+            // const resp = await Funcionario.create(
+            //     veiculo_instance,
+            //     err => {
+            //         if (err) return err;
+            //     }
+            // );
 
-            res.status(200).send(`${req.body.placa} cadastrado com sucesso!`);
+            console.log(veiculo);
+            // TODO - colocar um if para verificar se a inclusao no bancco ocorreu ok
+
+            // res.status(200).send(`${req.body.placa} cadastrado com sucesso!`);
+
             return res.json({
-                resp,
-                token: gerarToken({ id: resp._id }),
+                veiculo,
+                token: gerarToken({ id: veiculo._id }),
             });
             // const veiculo = new Veiculo({
             //     placa: placa,

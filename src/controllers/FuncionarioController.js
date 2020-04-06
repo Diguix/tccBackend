@@ -46,12 +46,14 @@ module.exports = {
         try {
             const funcionario = await Funcionario.find();
 
-            for(value in funcionario){
-              console.log(funcionario[value].cargo)
-              if (value == 'Transportador') {
-                  const veiculo = await Funcionario.find().populate('_veiculo');
-                  res.send(veiculo);
-              }
+            for (value in funcionario) {
+                console.log(funcionario[value].cargo);
+                if (value == 'Transportador') {
+                    const veiculo = await Funcionario.find().populate(
+                        '_veiculo'
+                    );
+                    res.send(veiculo);
+                }
             }
 
             return res.json(funcionario);
@@ -81,23 +83,28 @@ module.exports = {
             const { cpf } = req.body;
 
             if (await Funcionario.findOne({ cpf }))
-                return res.send('CPF já cadastrado');
+                return res.status(401).send('CPF já cadastrado');
 
             // insere no banco novo usuario
             let funcionario_instance = new Funcionario(req.body);
 
-            await funcionario_instance.save(err => {
-                if (err) return err;
-            });
+            await funcionario_instance.save();
+            // await funcionario_instance.save(err => {
+            //     if (err) return err;
+            // });
 
-            const funcionario = await Funcionario.create(
-                funcionario_instance,
-                err => {
-                    if (err) return err;
-                }
-            );
+            const funcionario = await Funcionario.create(funcionario_instance);
+            // const funcionario = await Funcionario.create(
+            //     funcionario_instance,
+            //     err => {
+            //         if (err) return err;
+            //     }
+            // );
 
-            res.status(200).send([req.body.nome] + '  Cadastrado!');
+            console.log(funcionario);
+            // TODO - colocar um if para verificar se a inclusao no bancco ocorreu ok
+
+            // res.status(200).send([req.body.nome] + '  Cadastrado!');
 
             // esconde a senha criada para nao mostrar nas buscas
             // funcionario.senha = undefined
