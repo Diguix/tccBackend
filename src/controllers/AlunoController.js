@@ -20,18 +20,25 @@ function gerarToken(params = {}) {
 
 const generateMatricula = async () => {
     try {
-        const sequence = await Sequence.find();
-        const sequenceValue = sequence[0].get('actual');
-        const sequenceValueIncremented = sequenceValue + 1;
-        await Sequence.findOneAndUpdate(
-            { actual: sequenceValue },
-            { actual: sequenceValueIncremented }
-        );
-        const sequenceValueWith0s = new String(
-            sequenceValueIncremented
-        ).padStart(7, '0');
-        const year = new Date().getFullYear();
-        const matricula = `${year}${sequenceValueWith0s}`;
+        // const sequence = await Sequence.find();
+
+        // const sequenceValue = sequence[0].get('actual');
+        // const sequenceValueIncremented = sequenceValue + 1;
+        // await Sequence.findOneAndUpdate(
+        //     { actual: sequenceValue },
+        //     { actual: sequenceValueIncremented }
+        // );
+        // const sequenceValueWith0s = new String(
+        //     sequenceValueIncremented
+        // ).padStart(7, '0');
+        // const year = new Date().getFullYear();
+        // const matricula = `${year}${sequenceValueWith0s}`;
+
+        let date = new Date().getFullYear();
+        let date2 = new Date().getSeconds();
+        let date3 = new Date().getMilliseconds();
+        let composeMatricula = `${date}${date2}${date3}` + 1;
+        let matricula = composeMatricula.toString();
 
         return matricula;
     } catch (err) {
@@ -72,16 +79,38 @@ module.exports = {
 
     async creating(req, res) {
         try {
+            const { _cpfResponsavel } = req.body;
+
             const matricula = await generateMatricula();
 
+            if (matricula) {
+                console.log('Criando uma nova matricula >> ', matricula);
+            } else {
+                console.log('ERRO criando matricula');
+            }
+
+            const findALuno = await Aluno.findOne({ matricula }).exec(
+                (err, result) => {
+                    if (!err) {
+                        console.log(
+                            `Matricula ${matricula} ainda não existe. Pode continuar`
+                        );
+                    } else {
+                        throw new Error('Matricula já existe', err);
+                    }
+                }
+            );
+
             const responsavel = await Responsavel.findOne({
-                cpf: req.body._cpfResponsavel,
+                cpf: _cpfResponsavel,
             });
+            
+            const { _id } = responsavel;
 
             const aluno = new Aluno({
                 matricula: matricula,
+                _responsavel: _id,
                 ...req.body,
-                _responsavel: responsavel._id,
             });
 
             await aluno.save();
@@ -91,15 +120,25 @@ module.exports = {
 
             await Responsavel.findOneAndUpdate(
                 {
-                    cpf: req.body._cpfResponsavel,
+                    cpf: _cpfResponsavel,
                 },
                 { _aluno: alunosArray }
-            );
+            ).exec((err, result) => {
+                if (!err) {
+                    console.log('responsavel findOneAndUpdate', result);
+                } else {
+                    throw new Error('ERRO responsavel findOneAndUpdate', err);
+                }
+            });
 
-            // res.status(201).send(`Aluno ${aluno.get('nome')} criado com Sucesso!`);
-            return res.json();
+            return res
+                .status(200)
+                .send(`Aluno ${aluno.get('nome')} criado com Sucesso!`);
+            // return res.json();
+            // console.info(res.json());
         } catch (err) {
-            res.status(500).send(err);
+            // res.status(500).send(err);
+            throw new Error(err);
         }
     },
 
