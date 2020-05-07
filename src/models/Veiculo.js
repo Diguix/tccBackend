@@ -22,7 +22,12 @@ const VeiculoSchema = new mongoose.Schema({
         required: true,
         uppecase: true,
     },
-    _cpfFuncionario: { type: String, required: true },
+    status: {
+        type: String,
+        required: true,
+        default: false
+    },
+    _cpfFuncionario: { type: String, required: false },
     _nomeFuncionario: { type: String, required: false },
     _cnhFuncionario: { type: String, required: false },
     _funcionario: [

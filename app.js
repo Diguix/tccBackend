@@ -14,7 +14,7 @@ const app = express();
 
 // Para usar banco local usar NODE_ENV como local
 const mongoUri =
-    process.env.NODE_ENV === 'local'
+    process.env.NODE_ENV === 'prd'
         ? process.env.MONGO_URL_LOCAL
         : process.env.MONGO_URL_AWS;
 

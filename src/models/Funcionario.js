@@ -46,7 +46,7 @@ const FuncionarioSchema = new mongoose.Schema({
         },
         { type: mongoose.Schema.Types.modelo, ref: 'Veiculo' },
     ],
-    updated: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
     createdAt: {
         type: Date,
         default: Date.now,
