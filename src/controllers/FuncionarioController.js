@@ -119,6 +119,7 @@ module.exports = {
 
             // insere no banco novo usuario
             let funcionario_instance = new Funcionario({
+                matricula: matricula,
                 ...req.body,
             });
 

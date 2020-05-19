@@ -20,7 +20,6 @@ const FuncionarioSchema = new mongoose.Schema({
     },
     cnh: {
         type: String,
-        required: true,
         trim: true,
     },
     cargo: {
