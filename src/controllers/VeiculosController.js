@@ -1,4 +1,5 @@
 const Veiculo = require('../models/Veiculo');
+const Funcionario = require('../models/Funcionario');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const jwtSecret = process.env.JWT_SECRET;
@@ -65,98 +66,115 @@ module.exports = {
 
     async creating(req, res) {
         try {
-            const { placa } = req.body;
+            const { placa, _cpfFuncionario } = req.body;
 
-            if (await Veiculo.findOne({ placa: placa }))
-                return res.status(401).send('Placa já cadastrada');
-
-            let veiculo_instance = new Veiculo(req.body);
-
-            await veiculo_instance.save();
-            // await veiculo_instance.save(err => {
-            //     if (err) return err;
+            // vetifica se existe algum cpf atrelado em algum veiculo
+            // const findCpf = await Veiculo.findOne({
+            //     _cpfFuncionario: _cpfFuncionario,
             // });
 
-            const veiculo = await Veiculo.create(veiculo_instance);
-            // const resp = await Funcionario.create(
-            //     veiculo_instance,
-            //     err => {
-            //         if (err) return err;
-            //     }
-            // );
-
-            console.log(veiculo);
-            // TODO - colocar um if para verificar se a inclusao no bancco ocorreu ok
-
-            // res.status(200).send(`${req.body.placa} cadastrado com sucesso!`);
-
-            return res.json({
-                veiculo,
-                token: gerarToken({ id: veiculo._id }),
+            // verifica se o veiculo ja existe
+            await Veiculo.find({
+                placa: placa,
             });
-            // const veiculo = new Veiculo({
-            //     placa: placa,
-            //     ...req.body,
-            //     _funcionario: funcionario._id,
-            // });
 
-            // await veiculo.save();
+            const motorista = await Funcionario.find({
+                cpf: _cpfFuncionario,
+            });
 
-            // const veiculoArray = funcionario.get('_placa');
-            // veiculoArray.push(veiculo._id);
+            const { _id, cpf } = motorista;
 
-            // await Funcionario.findOneAndUpdate(
-            //     {
-            //         cpf: req.body._cpfFuncionario,
-            //     },
-            //     { _veiculo: veiculoArray }
-            // );
+            console.log('PASSEI 2');
 
-            // res.status(201).send(
-            //     `Veiculo ${veiculo.get('placa')} criado com Sucesso`
-            // );
+            let veiculo_instance = new Veiculo({
+                _cpfFuncionario: cpf,
+                _funcionario: _id,
+                ...req.body,
+            });
+            console.log('veiculo_instance ===>', veiculo_instance);
 
-            // const veiculo_instance = new Veiculo(req.body);
+            console.log('PASSEI 3');
+            await veiculo_instance.save();
+            console.log('PASSEI 3.2');
 
-            // await veiculo_instance.save(err => {
-            //     if (err) return err;
-            // });
+            const veiculoArray = veiculo_instance.get('_funcionario');
+            veiculoArray.push(veiculo_instance);
+            console.log('PASSEI 3.3');
 
-            // const veiculos = await Veiculo.create(veiculo_instance, err => {
-            //     if (err) return err;
-            // });
+            const veiculo_update = await Veiculo.findOneAndUpdate(
+                {
+                    _cpfFuncionario: cpf,
+                },
+                {
+                    _funcionario: _id,
+                },
+                {
+                    new: true,
+                }
+            );
+            console.log('PASSEI 3.4');
 
-            // res.status(200).send(
-            //     [req.body.placa] +
-            //         ' ' +
-            //         ' ' +
-            //         [req.body.modelo] +
-            //         '  Cadastrado!'
-            // );
+            if (veiculo_update) {
+                console.log('veiculo_update ===>', veiculo_update);
+            } else {
+                console.log('ERRO veiculo findOneAndUpdate');
+            }
 
-            // esconde a senha criada para nao mostrar nas buscas
-            // veiculos.senha = undefined
+            console.log('PASSEI 4');
 
-            // retorna o usuario e token criado
-            // return res.json({
-            //     veiculos,
-            //     token: gerarToken({ id: veiculos._id }),
-            // });
+            const update_funcionario = await Funcionario.findOneAndUpdate(
+                {
+                    cpf: _cpfFuncionario,
+                },
+                { _veiculo: veiculo_instance },
+                { new: true }
+            );
+            console.log('update_funcionario', update_funcionario);
+
+            return res.send('Sucesso!');
         } catch (error) {
             return res
                 .status(500)
-                .send({ error: 'Nao foi possivel criar novo veiculo' });
+                .send({ error: 'Nao foi possivel criar novo funcionario' });
         }
     },
 
     //
     async update(req, res) {
         try {
-            const veiculos = await Veiculo.findByIdAndUpdate(
-                req.params.id,
-                req.body,
-                { new: true }
+            const { _cpfFuncionario } = req.body;
+            const { id } = req.params;
+
+            // busca o motorista para atualizar o array de funcionario
+            const motorista = await Funcionario.find({
+                cpf: _cpfFuncionario,
+            });
+
+            console.log('motorista', motorista[0].cpf);
+
+            const veiculos = await Veiculo.findByIdAndUpdate(id, req.body, {
+                new: true,
+            });
+
+            const veiculoArray = veiculos.get('_funcionario');
+            veiculoArray.unshift(motorista[0]);
+
+            console.log('veiculoArray', veiculoArray);
+            console.log('motorista[0]', motorista[0]);
+            const update_veiculo = await Veiculo.findOneAndUpdate(
+                {
+                    _cpfFuncionario: motorista[0].cpf,
+                },
+                {
+                    _funcionario: veiculoArray,
+                },
+                {
+                    new: true,
+                }
             );
+
+            console.log(update_veiculo);
+
             return res.json(veiculos);
         } catch (error) {
             return res.status(500).send(error);

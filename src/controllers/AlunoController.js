@@ -20,20 +20,6 @@ function gerarToken(params = {}) {
 
 const generateMatricula = async () => {
     try {
-        // const sequence = await Sequence.find();
-
-        // const sequenceValue = sequence[0].get('actual');
-        // const sequenceValueIncremented = sequenceValue + 1;
-        // await Sequence.findOneAndUpdate(
-        //     { actual: sequenceValue },
-        //     { actual: sequenceValueIncremented }
-        // );
-        // const sequenceValueWith0s = new String(
-        //     sequenceValueIncremented
-        // ).padStart(7, '0');
-        // const year = new Date().getFullYear();
-        // const matricula = `${year}${sequenceValueWith0s}`;
-
         let date = new Date().getFullYear();
         let date2 = new Date().getSeconds();
         let date3 = new Date().getMilliseconds();
@@ -89,22 +75,20 @@ module.exports = {
                 console.log('ERRO criando matricula');
             }
 
-            const findALuno = await Aluno.findOne({ matricula }).exec(
-                (err, result) => {
-                    if (!err) {
-                        console.log(
-                            `Matricula ${matricula} ainda não existe. Pode continuar`
-                        );
-                    } else {
-                        throw new Error('Matricula já existe', err);
-                    }
-                }
-            );
+            const findALuno = await Aluno.findOne({ matricula });
+
+            if (findALuno) {
+                console.log(
+                    `Matricula ${matricula} ainda não existe. Pode continuar`
+                );
+            } else {
+                throw new Error('Matricula já existe');
+            }
 
             const responsavel = await Responsavel.findOne({
                 cpf: _cpfResponsavel,
             });
-            
+
             const { _id } = responsavel;
 
             const aluno = new Aluno({
@@ -118,18 +102,18 @@ module.exports = {
             const alunosArray = responsavel.get('_aluno');
             alunosArray.push(aluno._id);
 
-            await Responsavel.findOneAndUpdate(
+            const responsavel_update = await Responsavel.findOneAndUpdate(
                 {
                     cpf: _cpfResponsavel,
                 },
                 { _aluno: alunosArray }
-            ).exec((err, result) => {
-                if (!err) {
-                    console.log('responsavel findOneAndUpdate', result);
-                } else {
-                    throw new Error('ERRO responsavel findOneAndUpdate', err);
-                }
-            });
+            );
+
+            if (responsavel_update) {
+                console.log('responsavel findOneAndUpdate', result);
+            } else {
+                throw new Error('ERRO responsavel findOneAndUpdate');
+            }
 
             return res
                 .status(200)

@@ -1,4 +1,5 @@
 const Funcionario = require('../models/Funcionario');
+const Veiculo = require('../models/Veiculo');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const jwtSecret = process.env.JWT_SECRET;
@@ -9,6 +10,20 @@ function gerarToken(params = {}) {
         expiresIn: jwtTTL,
     });
 }
+
+const generateMatricula = async () => {
+    try {
+        let date = new Date().getFullYear();
+        let date2 = new Date().getSeconds();
+        let date3 = new Date().getMilliseconds();
+        let composeMatricula = `${date}${date2}${date3}` + 1;
+        let matricula = composeMatricula.toString();
+
+        return matricula;
+    } catch (err) {
+        throw new Error(err);
+    }
+};
 
 module.exports = {
     /**
@@ -66,7 +81,7 @@ module.exports = {
         try {
             // const funcionario = await Funcionario.findById(req.params.id) // buscando por _id
             const funcionario = await Funcionario.find({
-                matricula: req.params.matricula,
+                cpf: req.params.cpf,
             }); // buscando por matricula
 
             if (!funcionario)
@@ -82,11 +97,30 @@ module.exports = {
         try {
             const { cpf } = req.body;
 
-            if (await Funcionario.findOne({ cpf }))
-                return res.status(401).send('CPF já cadastrado');
+            const matricula = await generateMatricula();
+            if (matricula) {
+                console.log('Criando uma nova matricula >> ', matricula);
+            } else {
+                console.log('ERRO criando matricula');
+            }
+
+            let fetchFunc = await Funcionario.findOne({ cpf }).exec(
+                (err, result) => {
+                    if (!err) {
+                        console.log(
+                            `CPF ${cpf} não cadastrado. Pode continuar`
+                        );
+                    } else {
+                        // throw new Error('Matricula já existe', err);
+                        return res.status(401).send('CPF já cadastrado');
+                    }
+                }
+            );
 
             // insere no banco novo usuario
-            let funcionario_instance = new Funcionario(req.body);
+            let funcionario_instance = new Funcionario({
+                ...req.body,
+            });
 
             await funcionario_instance.save();
             // await funcionario_instance.save(err => {

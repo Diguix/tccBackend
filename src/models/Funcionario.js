@@ -9,6 +9,10 @@ const FuncionarioSchema = new mongoose.Schema({
         required: true,
         uppecase: true,
     },
+    matricula: {
+        type: String,
+        // required: true,
+    },
     cpf: {
         type: String,
         required: true,
@@ -39,12 +43,11 @@ const FuncionarioSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-    _placa: [
+    _veiculo: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Veiculo',
         },
-        { type: mongoose.Schema.Types.modelo, ref: 'Veiculo' },
     ],
     updatedAt: { type: Date, default: Date.now },
     createdAt: {

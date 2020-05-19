@@ -24,20 +24,14 @@ const VeiculoSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        required: true,
-        default: false
+        default: false,
     },
     _cpfFuncionario: { type: String, required: false },
-    _nomeFuncionario: { type: String, required: false },
-    _cnhFuncionario: { type: String, required: false },
     _funcionario: [
         {
             type: mongoose.Schema.Types.ObjectId, // _id do funcionario atuando como FK em aluno para relacionar um com o outro
             ref: 'Funcionario', // coleçao
         },
-        { type: mongoose.Schema.Types.nome, ref: 'Funcionario' },
-        { type: mongoose.Schema.Types.cpf, ref: 'Funcionario' },
-        { type: mongoose.Schema.Types.cnh, ref: 'Funcionario' },
     ],
     updatedAt: { type: Date, default: Date.now },
     createdAt: {
