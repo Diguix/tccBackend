@@ -143,7 +143,7 @@ module.exports = {
             const { _cpfFuncionario, id } = req.body;
             // const { id } = req.params;
 
-            console.log('ID ID ID', id)
+            console.log('ID ID ID', req.body);
             // busca o motorista para atualizar o array de funcionario
             const motorista = await Funcionario.find({
                 cpf: _cpfFuncionario,
@@ -174,7 +174,8 @@ module.exports = {
                 },
                 {
                     new: true,
-                }
+                },
+                
             );
 
             console.log(update_veiculo);
